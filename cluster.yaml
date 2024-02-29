@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: express-sample
+  labels:
+    app: express-sample-pod
+spec:
+  replicas: 1
+  serviceName: express-sample-service
+  selector:
+    matchLabels:
+      app: express-sample-pod
+  template:
+    metadata:
+      labels:
+        app: express-sample-pod
+    spec:
+      containers:
+        - name: express-sample-container
+          image: ojoxdan/express-sample
+          ports:
+            - containerPort: 9900
+              protocol: TCP
+          volumeMounts:
+            - name: logs-dir
+              mountPath: logs
+
+      volumes:
+        - name: logs-dir
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    load-balancer.hetzner.cloud/location: hel1
+    load-balancer.hetzner.cloud/name: lbtest
+    load-balancer.hetzner.cloud/ipv6-disabled: "true"
+  name: express-sample-service
+
+spec:
+  selector:
+    app: express-sample-pod
+  ports:
+    - port: 9900
+      targetPort: 9900
+  type: LoadBalancer
